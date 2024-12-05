@@ -36,7 +36,6 @@ jobs:
         shell: bash
         run: |
           unzip zed-0.164.2.zip
-          mv zed-0.164.2/* .
           
       - name: Set git ref
         id: set_ref
