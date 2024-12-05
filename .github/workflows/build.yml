@@ -48,7 +48,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          override: true
           target: wasm32-wasip1
 
       - name: Download UPX
