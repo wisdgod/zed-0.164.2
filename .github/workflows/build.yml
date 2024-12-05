@@ -2,19 +2,6 @@ name: Build Zed Windows
 
 on:
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: 'Build type'
-        required: true
-        type: choice
-        options:
-          - release
-          - preview
-          - nightly
-      version:
-        description: 'Version without v prefix (e.g. 0.163.2 for release, 0.164.0 for preview). Leave empty to use latest'
-        required: false
-        type: string
 
 jobs:
   build:
@@ -48,7 +35,7 @@ jobs:
       - name: Extract source code
         shell: bash
         run: |
-          unzip main/zed-0.164.2.zip
+          unzip zed-0.164.2.zip
           mv zed-0.164.2/* .
           
       - name: Set git ref
@@ -65,10 +52,19 @@ jobs:
           override: true
           target: wasm32-wasip1
 
+      - name: Download UPX
+        shell: powershell
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/upx/upx/releases/download/v4.2.4/upx-4.2.4-win64.zip" -OutFile "upx.zip"
+          Expand-Archive -Path "upx.zip" -DestinationPath "."
+          
       - name: Build release
         env:
           RUSTFLAGS: ${{ matrix.rustflags }}
         run: cargo build --release
+
+      - name: Compress executable with UPX
+        run: .\upx-4.2.4-win64\upx.exe --best --lzma target/release/zed.exe
 
       - name: Archive build
         uses: actions/upload-artifact@v4.4.3
@@ -90,12 +86,7 @@ jobs:
 
       - name: Get version
         id: version
-        run: |
-          if [[ "${{ github.event.inputs.build_type }}" == "nightly" ]]; then
-            echo "VERSION=$(date +'%Y%m%d')" >> $GITHUB_ENV
-          else
-            echo "VERSION=${{ needs.build.outputs.version }}" >> $GITHUB_ENV
-          fi
+        run: echo "VERSION=v0.164.2" >> $GITHUB_ENV
 
       - name: Create release directories and zip
         run: |
